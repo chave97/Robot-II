@@ -5,6 +5,7 @@ from RPA.Dialogs import Dialogs
 from RPA.PDF import PDF
 from RPA.Archive import Archive
 from RPA.FileSystem import FileSystem
+from RPA.Robocorp.Vault import Vault
 import time
 
 MODAL_CONTAINER="css:div[class='container']"
@@ -18,7 +19,13 @@ ROBOT_PREVIEW_BUTTON="xpath://*[@id='preview'][@type='submit']"
 ROBOT_ORDER_BUTTON="xpath://*[@id='order'][text()='Order']"
 ROBOT_ORDER_ERROR="xpath://*[@class='alert alert-danger'][@role='alert']"
 ROBOT_SCREENSHOOT_PATH="output/images/robot{}-screenshoot.png"
-ROBOT_RECEIPT_PATH="./output/Order{}.pdf"
+ROBOT_RECEIPT_PATH="output/Order{}.pdf"
+
+
+def get_credentials():
+    _secret = Vault().get_secret("robotsparebin")
+    order_webpage = _secret["url"]
+    return(order_webpage)
 
 def wait():
     time.sleep(1)
@@ -71,13 +78,15 @@ def saveReceipt(order):
     receipt_table = browser.get_element_attribute("id:order-completion","outerHTML")
     pdf.html_to_pdf(receipt_table,ROBOT_RECEIPT_PATH.format(order["Order number"]))
     wait()
+    print(ROBOT_RECEIPT_PATH.format(order["Order number"]))
     pdf.open_pdf(ROBOT_RECEIPT_PATH.format(order["Order number"]))
     pdf.add_watermark_image_to_pdf(image_path=ROBOT_SCREENSHOOT_PATH.format(order["Order number"]),output_path=ROBOT_RECEIPT_PATH.format(order["Order number"]))
-    pdf.close_pdf(ROBOT_RECEIPT_PATH.format(order["Order number"]))
+    #comment the follow line. Give me this error: ValueError: PDF 'output/Order1.pdf' is not open
+    #pdf.close_pdf(ROBOT_RECEIPT_PATH.format(order["Order number"]))
 
 def cleanFiles():
     archive = Archive()
-    archive.archive_folder_with_zip("output","./output/Orders.zip",include="*.pdf")
+    archive.archive_folder_with_zip("output","output/Orders.zip",include="*.pdf")
     fileSystem = FileSystem()
     pdfOrders = fileSystem.find_files("output/*.pdf")
     for pdf in pdfOrders:
@@ -86,9 +95,10 @@ def cleanFiles():
     for image in pngRobots:
         fileSystem.remove_file(image)
 
-def orderRobots():
+def orderRobots(): 
+    url = get_credentials()
     orderTable = readCSV()
-    browser.open_available_browser("https://robotsparebinindustries.com/#/robot-order",maximized=True)
+    browser.open_available_browser(url,maximized=True)
     for order in orderTable:
         verifyModal()
         fillForm(order)
@@ -104,4 +114,3 @@ if __name__ == "__main__":
     browser = Selenium()
     downloadCSV()
     orderRobots()
-    cleanFiles()
