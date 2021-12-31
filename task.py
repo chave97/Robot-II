@@ -36,6 +36,7 @@ def verifyModal():
         browser.click_button(MODAL_OK_BUTTON)
 
 def downloadCSV():
+    http = HTTP()
     url = obtainUrl()
     http.download(url,target_file="output/SalesOrder.csv")
 
@@ -66,6 +67,7 @@ def fillForm(order):
         wait()
 
 def saveReceipt(order):
+    pdf = PDF()
     receipt_table = browser.get_element_attribute("id:order-completion","outerHTML")
     pdf.html_to_pdf(receipt_table,ROBOT_RECEIPT_PATH.format(order["Order number"]))
     wait()
@@ -93,13 +95,13 @@ def orderRobots():
         saveReceipt(order)
         browser.click_button("id:order-another")
     browser.close_browser()
+    cleanFiles()
+
     
 
             
 if __name__ == "__main__":   
     browser = Selenium()
-    http = HTTP()
-    pdf = PDF()
     downloadCSV()
     orderRobots()
     cleanFiles()
