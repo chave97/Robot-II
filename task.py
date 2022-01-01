@@ -32,7 +32,7 @@ def wait():
 
 def obtainUrl():
     dialog = Dialogs()
-    dialog.add_text("Porfavor ingrese url de archivo .csv")
+    dialog.add_text("Please write or paste the .csv file url")
     dialog.add_text_input("url")
     result = dialog.run_dialog()
     return(result["url"])
